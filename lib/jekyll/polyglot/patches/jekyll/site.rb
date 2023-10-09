@@ -4,10 +4,11 @@ include Process
 module Jekyll
   class Site
     attr_reader :default_lang, :languages, :exclude_from_localization, :lang_vars
-    attr_accessor :file_langs, :active_lang
+    attr_accessor :file_langs, :active_lang, :file_lang_urls
 
     def prepare
       @file_langs = {}
+      @file_lang_urls = {}
       fetch_languages
       @parallel_localization = config.fetch('parallel_localization', true)
       @lang_from_path = config.fetch('lang_from_path', false)
@@ -131,7 +132,12 @@ module Jekyll
         lang_exclusive = doc.data['lang-exclusive'] || []
         url = doc.url.gsub(regex, '/')
         lang_id = doc.data['lang_id'] || url
+        doc.data['lang_id'] = lang_id
         doc.data['permalink'] = url unless defined?(doc.data['permalink'])
+        
+        # Store translation urls
+        unless @file_lang_urls[lang_id] then @file_lang_urls[lang_id] = {} end
+        @file_lang_urls[lang_id][lang] = url
 
         # skip this document if it has already been processed
         next if @file_langs[lang_id] == @active_lang
